@@ -1,27 +1,12 @@
 import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
+import { TEMP_DIR } from '../config/paths.js';
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const { dni, anio } = req.body;
-
-        const folderAnio = anio || new Date().getFullYear();
-        const folderDNI = dni || 'sin_dni';
-        const uploadPath = `uploads/${folderAnio}/${folderDNI}`;
-
-        if (!fs.existsSync(uploadPath)){
-            fs.mkdirSync(uploadPath, { recursive: true});
-        }
-        cb(null, uploadPath);
-    },
-
+    destination: (req, file, cb) => cb(null, TEMP_DIR),
     filename: (req, file, cb) => {
-        const { tipo_documento } = req.body;
-        const extension = path.extname(file.originalname);
-        const nombreBase = tipo_documento ? tipo_documento : 'documento';
-
-        cb(null, `${nombreBase}-${Date.now()}${extension}`);
+        // Nombre temporal aleatorio; el controlador lo mueve a su carpeta final.
+        const nombre = `${Date.now()}-${Math.round(Math.random() * 1e9)}.pdf`;
+        cb(null, nombre);
     }
 });
 
@@ -33,4 +18,11 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-export const upload = multer({ storage, fileFilter });
+export const upload = multer({
+    storage,
+    fileFilter,
+    limits: {
+        fileSize: 20 * 1024 * 1024, // 20 MB
+        files: 1
+    }
+});

@@ -1,14 +1,16 @@
 import { Router } from 'express';
-import { obtenerEstudiantes } from "../controllers/estudiantes.controller.js";
-import { crearEstudiante } from "../controllers/estudiantes.controller.js";
-
+import {
+    obtenerEstudiantes,
+    obtenerEstudiante,
+    crearEstudiante,
+    actualizarEstudiante
+} from '../controllers/estudiantes.controller.js';
 
 const router = Router();
 
-// Define ruta GET y ejecuta el controlador
 router.get('/', obtenerEstudiantes);
-
-// Define ruta POST
+router.get('/:id', obtenerEstudiante);
 router.post('/', crearEstudiante);
+router.put('/:id', actualizarEstudiante);
 
 export default router;

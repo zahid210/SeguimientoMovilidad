@@ -51,3 +51,13 @@
   --ring: hsl(240 10% 3.9%);
   --radius: 0.5rem;
 }
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
