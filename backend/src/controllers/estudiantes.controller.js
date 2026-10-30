@@ -208,3 +208,20 @@ export const actualizarEstudiante = async (req, res) => {
         res.status(500).json({ exito: false, mensaje: 'Error interno al actualizar el estudiante.' });
     }
 };
+
+// DELETE: eliminar estudiante (y su movilidad/documentos en cascada)
+export const eliminarEstudiante = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [resultado] = await pool.query('DELETE FROM estudiantes WHERE id = ?', [id]);
+
+        if (resultado.affectedRows === 0) {
+            return res.status(404).json({ exito: false, mensaje: 'Estudiante no encontrado.' });
+        }
+
+        res.json({ exito: true, mensaje: 'Estudiante eliminado correctamente.' });
+    } catch (error) {
+        console.error('Error al eliminar estudiante:', error);
+        res.status(500).json({ exito: false, mensaje: 'Error interno al eliminar el estudiante.' });
+    }
+};

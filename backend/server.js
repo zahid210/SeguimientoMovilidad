@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import pool from './src/config/db.js';
 import { UPLOADS_DIR } from './src/config/paths.js';
+import { inicializarSequelize } from './src/models/index.js';
 import estudiantesRoutes from './src/routes/estudiantes.routes.js';
 import movilidadesRoutes from './src/routes/movilidades.routes.js';
 import documentosRoutes from './src/routes/documentos.routes.js';
@@ -15,6 +16,13 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
+
+// Inicialización automática de Sequelize (Base de datos limpia, tablas y catálogo)
+try {
+    await inicializarSequelize();
+} catch (error) {
+    console.error('Error al inicializar Sequelize ORM:', error.message);
+}
 
 // Estado real del servidor y de la base de datos
 app.get('/api/status', async (req, res) => {

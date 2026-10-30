@@ -93,11 +93,43 @@ const SELECT_MOVILIDADES = `
     INNER JOIN estudiantes e ON e.id = m.estudiante_id
 `;
 
-// GET: todas las movilidades
+// GET: todas las movilidades (incluye el checklist de 14 documentos por movilidad)
 export const obtenerMovilidades = async (req, res) => {
     try {
-        const [filas] = await pool.query(`${SELECT_MOVILIDADES} ORDER BY m.fecha_registro DESC`);
-        res.json({ exito: true, datos: filas.map(agregarResumen) });
+        const [filas] = await pool.query(`${SELECT_MOVILIDADES} ORDER BY m.id ASC`);
+        const [tipos] = await pool.query('SELECT codigo, nombre, orden FROM tipos_documento ORDER BY orden ASC');
+        const [docs] = await pool.query('SELECT movilidad_id, tipo_documento, estado_entrega, ruta_archivo, fecha_entrega, observacion FROM documentos');
+
+        const mapaDocs = new Map();
+        for (const doc of docs) {
+            if (!mapaDocs.has(doc.movilidad_id)) {
+                mapaDocs.set(doc.movilidad_id, new Map());
+            }
+            mapaDocs.get(doc.movilidad_id).set(doc.tipo_documento, doc);
+        }
+
+        const datos = filas.map((fila) => {
+            const resumen = agregarResumen(fila);
+            const docsMovilidad = mapaDocs.get(fila.id) || new Map();
+            const documentos = tipos.map((t) => {
+                const existente = docsMovilidad.get(t.codigo);
+                return {
+                    tipo_documento: t.codigo,
+                    nombre: t.nombre,
+                    orden: t.orden,
+                    estado_entrega: existente?.estado_entrega || 'Pendiente',
+                    ruta_archivo: existente?.ruta_archivo || null,
+                    fecha_entrega: existente?.fecha_entrega || null,
+                    observacion: existente?.observacion || null
+                };
+            });
+            return {
+                ...resumen,
+                documentos
+            };
+        });
+
+        res.json({ exito: true, datos });
     } catch (error) {
         console.error('Error al obtener movilidades:', error);
         res.status(500).json({ exito: false, mensaje: 'Error interno del servidor.' });
