@@ -88,7 +88,7 @@ function IconoArchivoCheck() {
 
 function IconoLapiz() {
     return (
-        <svg viewBox="0 0 24 24">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 20h9" />
             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z" />
         </svg>
@@ -97,12 +97,35 @@ function IconoLapiz() {
 
 function IconoMonitoreo() {
     return (
-        <svg viewBox="0 0 24 24">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
             <line x1="8" y1="2" x2="8" y2="6" />
             <line x1="3" y1="10" x2="21" y2="10" />
             <path d="M9 16l2 2 4-4" />
+        </svg>
+    );
+}
+
+function IconoReemplazar() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+            <path d="M16 21h5v-5" />
+        </svg>
+    );
+}
+
+function IconoPapelera() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6h18" />
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
         </svg>
     );
 }
@@ -564,9 +587,9 @@ export default function App() {
             )}
 
             {/* =========================================
-                FILA 0: CABECERA SINCRONIZADA
+                FILA 0: CABECERA SUPERIOR FIJA
             ========================================= */}
-            <div className="matrix-row">
+            <div className="matrix-header-row">
                 <aside className="sidebar-cell sidebar-cell--header">
                     <div className="sidebar-search">
                         <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.2">
@@ -593,14 +616,14 @@ export default function App() {
                     </div>
                 </aside>
 
-                <div className="main-cell main-cell--header">
+                <div className="main-cell--header">
                     <header className="main-header">
                         <div className="header-summary">
                             <span className="header-pill">
-                                ESTUDIANTES: {filas.length}
+                                ESTUDIANTES: {cargando ? '...' : filas.length}
                             </span>
                             <span className="header-pill">
-                                EXPEDIENTES COMPLETOS: {completosCount}/{filas.length}
+                                EXPEDIENTES COMPLETOS: {cargando ? '...' : `${completosCount}/${filas.length}`}
                             </span>
                         </div>
 
@@ -644,266 +667,270 @@ export default function App() {
             </div>
 
             {/* =========================================
-                FILAS DE ESTUDIANTES Y SUS DOCUMENTOS
+                CONTENEDOR PRINCIPAL CON SCROLL VERTICAL MINIMALISTA
+                Filas sincronizadas automáticamente por CSS Grid 1:1
             ========================================= */}
-            {filasFiltradas.map((fila) => {
-                const documentos = fila.documentos || [];
-                const entregados = Number(fila.documentos_entregados || 0);
-                const total = Number(fila.documentos_total || 14);
-                const completo = Boolean(fila.expediente_completo);
-                const nombreCompleto = `${fila.nombres} ${fila.apellido_paterno} ${fila.apellido_materno}`;
+            <div className="matrix-scroll-body">
+                {cargando ? (
+                    // Skeletons de carga elegantes para evitar saltos o parpadeos bruscos al recargar
+                    Array.from({ length: 3 }).map((_, idx) => (
+                        <div key={`skeleton-${idx}`} className="matrix-row matrix-row--skeleton">
+                            <aside className="sidebar-cell">
+                                <div className="skeleton-card" />
+                            </aside>
+                            <main className="main-cell">
+                                <div className="skeleton-document-section" />
+                            </main>
+                        </div>
+                    ))
+                ) : (
+                    <>
+                        {filasFiltradas.map((fila) => {
+                            const documentos = fila.documentos || [];
+                            const entregados = Number(fila.documentos_entregados || 0);
+                            const total = Number(fila.documentos_total || 14);
+                            const completo = Boolean(fila.expediente_completo);
+                            const nombreCompleto = `${fila.nombres} ${fila.apellido_paterno} ${fila.apellido_materno}`;
 
-                return (
-                    <div
-                        key={fila.id}
-                        id={`fila-movilidad-${fila.id}`}
-                        className="matrix-row"
-                    >
-                        {/* COLUMNA IZQUIERDA: PERFIL DEL ESTUDIANTE */}
-                        <aside className="sidebar-cell">
-                            <article
-                                className={`profile-card ${filaResaltada === fila.id ? 'profile-card--highlighted' : ''}`}
-                            >
-                                <div className="profile-info">
-                                    <div className="profile-header">
-                                        <h2 title={nombreCompleto}>{nombreCompleto}</h2>
-                                    </div>
-
-                                    <div className="profile-columns">
-                                        {/* Columna 1: Datos del Estudiante */}
-                                        <dl className="profile-details">
-                                            <div>
-                                                <dt>DNI:</dt>
-                                                <dd>{fila.dni}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Código:</dt>
-                                                <dd>{fila.codigo_estudiante}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Semestre:</dt>
-                                                <dd>{NOMBRES_SEMESTRE[String(fila.semestre)] || `${fila.semestre}.º`}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Fac. Origen:</dt>
-                                                <dd title={`${fila.facultad_origen || ''}${fila.escuela_profesional ? ` - ${fila.escuela_profesional}` : ''}`}>
-                                                    {fila.facultad_origen || '—'}
-                                                </dd>
-                                            </div>
-                                            <div>
-                                                <dt>Correo Inst.:</dt>
-                                                <dd title={fila.correo_institucional}>{fila.correo_institucional}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Correo Pers.:</dt>
-                                                <dd title={fila.correo_personal}>{fila.correo_personal}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Celular:</dt>
-                                                <dd>{fila.telefono_whatsapp || '—'}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Cel. Padre:</dt>
-                                                <dd>{fila.contacto_emergencia || '—'}</dd>
-                                            </div>
-                                        </dl>
-
-                                        {/* Columna 2: Datos de Movilidad y Destino */}
-                                        <dl className="profile-details profile-details--right">
-                                            <div>
-                                                <dt>Univ. Destino:</dt>
-                                                <dd title={fila.universidad_destino}>{fila.universidad_destino || '—'}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Fac. Destino:</dt>
-                                                <dd title={fila.facultad_destino}>{fila.facultad_destino || '—'}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>País / Ciudad:</dt>
-                                                <dd title={`${fila.ciudad_destino || ''}, ${fila.pais_destino || ''}`}>
-                                                    {fila.pais_destino || '—'}{fila.ciudad_destino && fila.ciudad_destino !== 'Por definir' ? ` (${fila.ciudad_destino})` : ''}
-                                                </dd>
-                                            </div>
-                                            <div>
-                                                <dt>Dirección:</dt>
-                                                <dd title={fila.direccion_residencia}>{fila.direccion_residencia || '—'}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Salida:</dt>
-                                                <dd>{formatearFecha(fila.fecha_salida)}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Retorno:</dt>
-                                                <dd>{formatearFecha(fila.fecha_retorno)}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Estado:</dt>
-                                                <dd>{fila.estado || '—'}</dd>
-                                            </div>
-                                            <div>
-                                                <dt>Postulado:</dt>
-                                                <dd>{fila.postulado ? 'SÍ' : 'NO'}</dd>
-                                            </div>
-                                        </dl>
-                                    </div>
-                                </div>
-
-                                <div className="profile-actions">
-                                    <button
-                                        className="edit-button"
-                                        type="button"
-                                        onClick={() => abrirModalEditar(fila)}
-                                        aria-label={`Editar perfil de ${nombreCompleto}`}
-                                        title="Editar estudiante y destino"
-                                    >
-                                        <IconoLapiz />
-                                    </button>
-                                    <button
-                                        className="monitor-button"
-                                        type="button"
-                                        onClick={() => abrirModalMonitoreo(fila)}
-                                        aria-label={`Monitoreo quincenal de ${nombreCompleto}`}
-                                        title="Monitoreo quincenal (cada 15 días)"
-                                    >
-                                        <IconoMonitoreo />
-                                        {fila.monitoreo_vencido && <span className="monitor-dot" title="Monitoreo vencido" />}
-                                    </button>
-                                </div>
-                            </article>
-                        </aside>
-
-                        {/* COLUMNA DERECHA: LOS 14 DOCUMENT ITEMS EN 1 SOLA FILA CON SCROLL INVISIBLE */}
-                        <main className="main-cell">
-                            <section
-                                className="document-section"
-                                aria-label={`Documentación de ${nombreCompleto}`}
-                            >
-                                <div className="document-section-header">
-                                    <span />
-                                    <span
-                                        className={`doc-progress-badge ${completo ? 'doc-progress-badge--complete' : ''}`}
-                                        title={completo ? '14 de 14 documentos entregados' : `${entregados} documentos entregados de ${total}`}
-                                    >
-                                        {completo ? 'EXPEDIENTE COMPLETO · 14/14' : `${entregados} / ${total} ENTREGADOS`}
-                                    </span>
-                                </div>
-
+                            return (
                                 <div
-                                    className="document-grid"
-                                    onWheel={(e) => {
-                                        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-                                            e.currentTarget.scrollLeft += e.deltaY;
-                                        }
-                                    }}
+                                    key={fila.id}
+                                    id={`fila-movilidad-${fila.id}`}
+                                    className="matrix-row"
                                 >
-                                    {documentos.map((doc) => {
-                                        const adjunto = doc.estado_entrega === 'Entregado';
-                                        const clave = `${fila.id}-${doc.tipo_documento}`;
-                                        const estaSubiendo = subiendoClave === clave;
-                                        const tituloCorto = ETIQUETAS_CORTAS_DOC[doc.tipo_documento] || doc.nombre.toUpperCase();
+                                    {/* COLUMNA IZQUIERDA: PERFIL DEL ESTUDIANTE */}
+                                    <aside className="sidebar-cell">
+                                        <article
+                                            className={`profile-card ${filaResaltada === fila.id ? 'profile-card--highlighted' : ''}`}
+                                        >
+                                            <div className="profile-info">
+                                                <div className="profile-header">
+                                                    <h2 title={nombreCompleto}>{nombreCompleto}</h2>
+                                                </div>
 
-                                        return (
-                                            <article key={doc.tipo_documento} className="document-item">
-                                                <h3 title={doc.nombre}>{tituloCorto}</h3>
+                                                <div className="profile-columns">
+                                                    {/* Columna 1: Datos del Estudiante */}
+                                                    <dl className="profile-details">
+                                                        <div>
+                                                            <dt>DNI:</dt>
+                                                            <dd>{fila.dni}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Código:</dt>
+                                                            <dd>{fila.codigo_estudiante}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Semestre:</dt>
+                                                            <dd>{NOMBRES_SEMESTRE[String(fila.semestre)] || `${fila.semestre}.º`}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Fac. Origen:</dt>
+                                                            <dd title={`${fila.facultad_origen || ''}${fila.escuela_profesional ? ` - ${fila.escuela_profesional}` : ''}`}>
+                                                                {fila.facultad_origen || '—'}
+                                                            </dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Correo Inst.:</dt>
+                                                            <dd title={fila.correo_institucional}>{fila.correo_institucional}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Correo Pers.:</dt>
+                                                            <dd title={fila.correo_personal}>{fila.correo_personal}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Celular:</dt>
+                                                            <dd>{fila.telefono_whatsapp || '—'}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Cel. Padre:</dt>
+                                                            <dd>{fila.contacto_emergencia || '—'}</dd>
+                                                        </div>
+                                                    </dl>
 
-                                                <div
-                                                    className="document-dropzone-wrapper"
-                                                    onDragOver={(e) => e.preventDefault()}
-                                                    onDrop={(e) => {
-                                                        e.preventDefault();
-                                                        const archivo = e.dataTransfer?.files?.[0];
-                                                        if (archivo) {
-                                                            subirArchivoPdf(fila.id, doc.tipo_documento, archivo);
-                                                        }
-                                                    }}
+                                                    {/* Columna 2: Datos de Movilidad y Destino */}
+                                                    <dl className="profile-details profile-details--right">
+                                                        <div>
+                                                            <dt>Univ. Destino:</dt>
+                                                            <dd title={fila.universidad_destino}>{fila.universidad_destino || '—'}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Fac. Destino:</dt>
+                                                            <dd title={fila.facultad_destino}>{fila.facultad_destino || '—'}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>País / Ciudad:</dt>
+                                                            <dd title={`${fila.ciudad_destino || ''}, ${fila.pais_destino || ''}`}>
+                                                                {fila.pais_destino || '—'}{fila.ciudad_destino && fila.ciudad_destino !== 'Por definir' ? ` (${fila.ciudad_destino})` : ''}
+                                                            </dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Dirección:</dt>
+                                                            <dd title={fila.direccion_residencia}>{fila.direccion_residencia || '—'}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Salida:</dt>
+                                                            <dd>{formatearFecha(fila.fecha_salida)}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Retorno:</dt>
+                                                            <dd>{formatearFecha(fila.fecha_retorno)}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Estado:</dt>
+                                                            <dd>{fila.estado || '—'}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt>Postulado:</dt>
+                                                            <dd>{fila.postulado ? 'SÍ' : 'NO'}</dd>
+                                                        </div>
+                                                    </dl>
+                                                </div>
+                                            </div>
+
+                                            <div className="profile-actions">
+                                                <button
+                                                    className="edit-button"
+                                                    type="button"
+                                                    onClick={() => abrirModalEditar(fila)}
+                                                    aria-label={`Editar perfil de ${nombreCompleto}`}
+                                                    title="Editar estudiante y destino"
                                                 >
-                                                    <button
-                                                        type="button"
-                                                        className={`document-dropzone ${adjunto ? 'document-dropzone--attached' : ''}`}
-                                                        onClick={() => manejarClickDropzone(fila.id, doc)}
-                                                        disabled={estaSubiendo}
-                                                        title={
-                                                            adjunto
-                                                                ? `${doc.nombre}: Adjuntado. Clic para abrir el PDF.`
-                                                                : `${doc.nombre}: Pendiente. Clic o arrastra un PDF aquí para adjuntar.`
-                                                        }
-                                                    >
-                                                        {adjunto ? <IconoArchivoCheck /> : <IconoArchivoMas />}
-                                                        <span
-                                                            className={`doc-status-pill ${adjunto ? 'doc-status-pill--si' : 'doc-status-pill--no'}`}
-                                                        >
-                                                            {estaSubiendo ? '...' : adjunto ? 'ADJUNTADO' : 'PENDIENTE'}
-                                                        </span>
-                                                    </button>
+                                                    <IconoLapiz />
+                                                </button>
+                                                <button
+                                                    className="monitor-button"
+                                                    type="button"
+                                                    onClick={() => abrirModalMonitoreo(fila)}
+                                                    aria-label={`Monitoreo quincenal de ${nombreCompleto}`}
+                                                    title="Monitoreo quincenal (cada 15 días)"
+                                                >
+                                                    <IconoMonitoreo />
+                                                    {fila.monitoreo_vencido && <span className="monitor-dot" title="Monitoreo vencido" />}
+                                                </button>
+                                            </div>
+                                        </article>
+                                    </aside>
 
-                                                    {adjunto && !estaSubiendo && (
-                                                        <div className="doc-quick-actions">
-                                                            <button
-                                                                type="button"
-                                                                className="doc-action-btn"
-                                                                title="Reemplazar PDF"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    abrirSelectorPdf(fila.id, doc.tipo_documento);
+                                    {/* COLUMNA DERECHA: LOS 14 DOCUMENT ITEMS */}
+                                    <main className="main-cell">
+                                        <section
+                                            className="document-section"
+                                            aria-label={`Documentación de ${nombreCompleto}`}
+                                        >
+                                            <div className="document-section-header">
+                                                <span />
+                                                <span
+                                                    className={`doc-progress-badge ${completo ? 'doc-progress-badge--complete' : ''}`}
+                                                    title={completo ? '14 de 14 documentos entregados' : `${entregados} documentos entregados de ${total}`}
+                                                >
+                                                    {completo ? 'EXPEDIENTE COMPLETO · 14/14' : `${entregados} / ${total} ENTREGADOS`}
+                                                </span>
+                                            </div>
+
+                                            <div className="document-grid">
+                                                {documentos.map((doc) => {
+                                                    const adjunto = doc.estado_entrega === 'Entregado';
+                                                    const clave = `${fila.id}-${doc.tipo_documento}`;
+                                                    const estaSubiendo = subiendoClave === clave;
+                                                    const tituloCorto = ETIQUETAS_CORTAS_DOC[doc.tipo_documento] || doc.nombre.toUpperCase();
+
+                                                    return (
+                                                        <article key={doc.tipo_documento} className="document-item">
+                                                            <h3 title={doc.nombre}>{tituloCorto}</h3>
+
+                                                            <div
+                                                                className="document-dropzone-wrapper"
+                                                                onDragOver={(e) => e.preventDefault()}
+                                                                onDrop={(e) => {
+                                                                    e.preventDefault();
+                                                                    const archivo = e.dataTransfer?.files?.[0];
+                                                                    if (archivo) {
+                                                                        subirArchivoPdf(fila.id, doc.tipo_documento, archivo);
+                                                                    }
                                                                 }}
                                                             >
-                                                                ↻
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className="doc-action-btn doc-action-btn--danger"
-                                                                title="Quitar PDF"
-                                                                onClick={(e) => quitarDocumentoPdf(e, fila.id, doc.tipo_documento)}
-                                                            >
-                                                                ×
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </article>
-                                        );
-                                    })}
+                                                                <button
+                                                                    type="button"
+                                                                    className={`document-dropzone ${adjunto ? 'document-dropzone--attached' : ''}`}
+                                                                    onClick={() => manejarClickDropzone(fila.id, doc)}
+                                                                    disabled={estaSubiendo}
+                                                                    title={
+                                                                        adjunto
+                                                                            ? `${doc.nombre}: Adjuntado. Clic para abrir el PDF.`
+                                                                            : `${doc.nombre}: Pendiente. Clic o arrastra un PDF aquí para adjuntar.`
+                                                                    }
+                                                                >
+                                                                    {adjunto ? <IconoArchivoCheck /> : <IconoArchivoMas />}
+                                                                    <span
+                                                                        className={`doc-status-pill ${adjunto ? 'doc-status-pill--si' : 'doc-status-pill--no'}`}
+                                                                    >
+                                                                        {estaSubiendo ? '...' : adjunto ? 'ADJUNTADO' : 'PENDIENTE'}
+                                                                    </span>
+                                                                </button>
+
+                                                                {adjunto && !estaSubiendo && (
+                                                                    <div className="doc-quick-actions">
+                                                                        <button
+                                                                            type="button"
+                                                                            className="doc-action-btn doc-action-btn--replace"
+                                                                            title="Reemplazar archivo PDF"
+                                                                            aria-label="Reemplazar archivo PDF"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                abrirSelectorPdf(fila.id, doc.tipo_documento);
+                                                                            }}
+                                                                        >
+                                                                            <IconoReemplazar />
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="doc-action-btn doc-action-btn--delete"
+                                                                            title="Quitar archivo PDF"
+                                                                            aria-label="Quitar archivo PDF"
+                                                                            onClick={(e) => quitarDocumentoPdf(e, fila.id, doc.tipo_documento)}
+                                                                        >
+                                                                            <IconoPapelera />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </article>
+                                                    );
+                                                })}
+                                            </div>
+                                        </section>
+                                    </main>
                                 </div>
-                            </section>
-                        </main>
-                    </div>
-                );
-            })}
+                            );
+                        })}
 
-            {/* =========================================
-                ÚNICA FILA PARA AGREGAR NUEVO ESTUDIANTE (+)
-            ========================================= */}
-            <div className="matrix-row">
-                <aside className="sidebar-cell">
-                    <button
-                        className="photo-upload"
-                        type="button"
-                        onClick={abrirModalNuevo}
-                        aria-label="Agregar nuevo estudiante"
-                        title="Haz clic para agregar un nuevo estudiante"
-                    >
-                        <span className="add-student-icon">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
-                        </span>
-                        <span className="photo-upload-label">Agregar estudiante</span>
-                    </button>
-                </aside>
+                        {/* ÚNICA FILA PARA AGREGAR NUEVO ESTUDIANTE (+) */}
+                        <div className="matrix-row">
+                            <aside className="sidebar-cell">
+                                <button
+                                    className="photo-upload"
+                                    type="button"
+                                    onClick={abrirModalNuevo}
+                                    aria-label="Agregar nuevo estudiante"
+                                    title="Haz clic para agregar un nuevo estudiante"
+                                >
+                                    <span className="add-student-icon">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M12 5v14M5 12h14" />
+                                        </svg>
+                                    </span>
+                                    <span className="photo-upload-label">Agregar estudiante</span>
+                                </button>
+                            </aside>
 
-                <div className="main-cell">
-                    <div className="workspace-band">
-                        {!cargando
-                            ? 'Al agregar un estudiante en (+), sus 14 documentos se generarán automáticamente en esta fila'
-                            : ''}
-                    </div>
-                </div>
-            </div>
-
-            {/* Relleno inferior para mantener la barra azul continua hasta el fondo de la pantalla */}
-            <div className="matrix-row matrix-row--filler">
-                <aside className="sidebar-cell sidebar-cell--filler"></aside>
-                <div className="main-cell" style={{ paddingBottom: 0 }}></div>
+                            <div className="main-cell">
+                                <div className="workspace-band">
+                                    Al agregar un estudiante en (+), sus 14 documentos se generarán automáticamente en esta fila
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* =========================================
@@ -925,7 +952,7 @@ export default function App() {
                                 <p>
                                     {modoEdicion
                                         ? 'Actualiza los datos del perfil del estudiante y su destino de movilidad.'
-                                        : 'Al guardar el estudiante se creará automáticamente su fila con los 14 ítems de documentos.'}
+                                        : 'Al guardar el estudiante se generará automáticamente su expediente con los 14 ítems de documentos.'}
                                 </p>
                             </div>
                             <button
@@ -1250,7 +1277,7 @@ export default function App() {
                                                 ? 'GUARDANDO...'
                                                 : modoEdicion
                                                     ? 'GUARDAR CAMBIOS'
-                                                    : 'CREAR ESTUDIANTE Y FILA'}
+                                                    : 'CREAR ESTUDIANTE'}
                                         </button>
                                     </div>
                                 </div>

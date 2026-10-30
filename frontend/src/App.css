@@ -24,11 +24,47 @@
     box-sizing: border-box;
 }
 
+/* =========================================
+   SCROLLBAR MINIMALISTA Y ELEGANTE
+========================================= */
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(51, 99, 172, 0.35) transparent;
+}
+
+/* WebKit (Chrome, Safari, Edge, Chromium) */
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(51, 99, 172, 0.28);
+    border-radius: 999px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(51, 99, 172, 0.65);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 html,
 body,
 #root {
-    min-height: 100vh;
+    height: 100vh;
+    max-height: 100vh;
     width: 100%;
+    overflow: hidden;
     font-family: Arial, Helvetica, sans-serif;
     background: var(--white);
     color: var(--dark);
@@ -37,28 +73,105 @@ body,
 
 /* =========================================
    ESTRUCTURA PRINCIPAL POR FILAS SINCRONIZADAS
-   Garantiza que la columna izquierda (azul) y
-   la derecha (gris/blanca) jamás se desalineen
-   en ninguna resolución de pantalla PC.
+   El sidebar azul cuenta con fondo sólido continuo de arriba a abajo.
+   Cabecera superior fija y cuerpo con scroll vertical nativo fluido.
 ========================================= */
 
 .matrix-app {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
+    max-height: 100vh;
     width: 100%;
+    overflow: hidden;
+    background: linear-gradient(
+        to right,
+        var(--blue) 0px,
+        var(--blue) var(--sidebar-width),
+        var(--white) var(--sidebar-width),
+        var(--white) 100%
+    );
 }
 
+/* Cabecera superior fija */
+.matrix-header-row {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    width: 100%;
+    height: var(--header-height);
+    flex: 0 0 var(--header-height);
+    align-items: stretch;
+    z-index: 20;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Contenedor principal con scroll vertical unificado y fondo continuo */
+.matrix-scroll-body {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    display: flex;
+    flex-direction: column;
+    padding-top: 14px;
+    padding-bottom: 40px;
+    background: linear-gradient(
+        to right,
+        var(--blue) 0px,
+        var(--blue) var(--sidebar-width),
+        var(--white) var(--sidebar-width),
+        var(--white) 100%
+    );
+    background-attachment: local;
+}
+
+/* Cada fila sincronizada 1:1 por CSS Grid */
 .matrix-row {
     display: grid;
     grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
     width: 100%;
     align-items: stretch;
+    margin-bottom: var(--row-gap);
+    flex-shrink: 0;
 }
 
-.matrix-row--filler {
-    flex: 1 1 auto;
-    min-height: 24px;
+/* =========================================
+   ESTADOS DE CARGA (SKELETON MINIMALISTA)
+========================================= */
+
+@keyframes skeleton-shimmer {
+    0% {
+        opacity: 0.45;
+    }
+    50% {
+        opacity: 0.85;
+    }
+    100% {
+        opacity: 0.45;
+    }
+}
+
+.matrix-row--skeleton {
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-card {
+    width: 100%;
+    height: var(--row-height);
+    min-height: var(--row-height);
+    border: var(--dash) rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.skeleton-document-section {
+    width: 100%;
+    height: var(--row-height);
+    min-height: var(--row-height);
+    background: var(--gray);
+    border-radius: 4px;
 }
 
 /* =========================================
@@ -66,17 +179,16 @@ body,
 ========================================= */
 
 .sidebar-cell {
-    background: var(--blue);
-    padding: 0 clamp(14px, 1.8vw, 28px);
-    padding-bottom: var(--row-gap);
+    padding: 0 clamp(16px, 2.2vw, 32px);
     display: flex;
     flex-direction: column;
     justify-content: stretch;
 }
 
 .sidebar-cell--header {
+    background: var(--blue);
+    padding: 0 clamp(16px, 2.2vw, 32px);
     height: var(--header-height);
-    padding-bottom: 0;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -84,9 +196,24 @@ body,
     gap: 10px;
 }
 
-.sidebar-cell--filler {
-    background: var(--blue);
-    padding-bottom: 0;
+/* =========================================
+   CELDAS DE LA COLUMNA DERECHA (MAIN PANEL)
+========================================= */
+
+.main-cell {
+    min-width: 0;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+.main-cell--header {
+    height: var(--header-height);
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid rgba(51, 99, 172, 0.08);
 }
 
 /* Buscador minimalista en cabecera azul */
@@ -151,13 +278,12 @@ body,
     height: 100%;
 
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 42px;
+    grid-template-columns: minmax(0, 1fr) 48px;
 
     border: var(--dash) var(--white);
     border-radius: var(--radius);
 
     color: var(--white);
-    overflow: hidden;
     transition: box-shadow 0.2s ease, background 0.2s ease;
 }
 
@@ -168,10 +294,11 @@ body,
 
 .profile-info {
     min-width: 0;
-    padding: 11px 13px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    gap: 8px;
 }
 
 .profile-header {
@@ -179,11 +306,11 @@ body,
     align-items: flex-start;
     justify-content: space-between;
     gap: 6px;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 
 .profile-info h2 {
-    font-size: clamp(12.5px, 0.92vw, 15.5px);
+    font-size: clamp(12.5px, 0.92vw, 15px);
     font-weight: 700;
     line-height: 1.25;
     color: var(--white);
@@ -223,11 +350,11 @@ body,
 
 .profile-details {
     min-width: 0;
-    font-size: clamp(9.5px, 0.65vw, 11.2px);
+    font-size: clamp(9.5px, 0.65vw, 11px);
     line-height: 1.35;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 2.5px;
 }
 
 .profile-details--right {
@@ -264,10 +391,12 @@ body,
 
 .edit-button,
 .monitor-button {
-    flex: 1;
+    flex: 1 1 50%;
     width: 100%;
+    min-height: 48px;
     background: transparent;
     border: none;
+    padding: 0;
 
     display: flex;
     flex-direction: column;
@@ -276,7 +405,7 @@ body,
     position: relative;
 
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, opacity 0.2s ease;
 }
 
 .monitor-button {
@@ -285,28 +414,35 @@ body,
 
 .edit-button svg,
 .monitor-button svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: var(--white);
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
+    transition: transform 0.15s ease;
 }
 
 .edit-button:hover,
 .monitor-button:hover {
-    background: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.edit-button:hover svg,
+.monitor-button:hover svg {
+    transform: scale(1.12);
 }
 
 .monitor-dot {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 7px;
-    height: 7px;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #FCD34D;
+    box-shadow: 0 0 0 2px var(--blue);
 }
 
 /* =========================================
@@ -372,21 +508,15 @@ body,
 }
 
 /* =========================================
-   CELDAS DE LA COLUMNA DERECHA (MAIN PANEL)
+   CABECERA DERECHA (MAIN PANEL)
 ========================================= */
-
-.main-cell {
-    min-width: 0;
-    background: var(--white);
-    padding-bottom: var(--row-gap);
-    display: flex;
-    flex-direction: column;
-    justify-content: stretch;
-}
 
 .main-cell--header {
     height: var(--header-height);
-    padding-bottom: 0;
+    min-width: 0;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
 }
 
 .main-header {
@@ -492,7 +622,7 @@ body,
     min-height: var(--row-height);
     height: 100%;
     background: var(--gray);
-    padding: 12px clamp(16px, 2.2vw, 32px);
+    padding: 10px clamp(16px, 2.2vw, 32px) 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -505,7 +635,7 @@ body,
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     padding: 0 2px;
 }
 
@@ -525,7 +655,7 @@ body,
     border: none;
 }
 
-/* 1 sola fila horizontal con scroll invisible y mayor densidad de cards */
+/* 1 sola fila horizontal con scroll visible, elegante y con separación */
 .document-grid {
     width: 100%;
     display: flex;
@@ -535,18 +665,31 @@ body,
     gap: clamp(12px, 1.35vw, 22px);
     overflow-x: auto;
     overflow-y: hidden;
+    padding-bottom: 10px;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-
-    /* Scrollbar 100% invisible */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(51, 99, 172, 0.5) rgba(51, 99, 172, 0.08);
 }
 
 .document-grid::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+    height: 8px;
+}
+
+.document-grid::-webkit-scrollbar-track {
+    background: rgba(51, 99, 172, 0.08);
+    border-radius: 999px;
+}
+
+.document-grid::-webkit-scrollbar-thumb {
+    background: rgba(51, 99, 172, 0.45);
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: background 0.2s ease;
+}
+
+.document-grid::-webkit-scrollbar-thumb:hover {
+    background: var(--blue);
 }
 
 .document-item {
@@ -644,51 +787,64 @@ body,
     font-weight: 700;
 }
 
-/* Botones rápidos al pasar el mouse sobre un documento adjunto */
+/* Barra flotante de acciones rápidas sobre documentos adjuntos */
 .doc-quick-actions {
     position: absolute;
-    top: 3px;
-    right: 3px;
+    top: 6px;
+    right: 6px;
     display: flex;
-    gap: 3px;
+    align-items: center;
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.16);
+    border: 1px solid rgba(51, 99, 172, 0.22);
+    padding: 2px;
+    gap: 2px;
+    z-index: 10;
     opacity: 0;
-    transition: opacity 0.15s ease;
+    transform: translateY(-3px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 .document-dropzone-wrapper:hover .doc-quick-actions {
     opacity: 1;
+    transform: translateY(0);
 }
 
 .doc-action-btn {
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-    border: 1px solid var(--blue);
-    background: var(--white);
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
     color: var(--blue);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1;
     padding: 0;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
 }
 
-.doc-action-btn:hover {
-    background: var(--blue);
-    color: var(--white);
+.doc-action-btn svg {
+    width: 14px;
+    height: 14px;
 }
 
-.doc-action-btn--danger {
-    border-color: #DC2626;
+.doc-action-btn--replace:hover {
+    background: rgba(51, 99, 172, 0.12);
+    color: var(--blue-dark);
+    transform: scale(1.08);
+}
+
+.doc-action-btn--delete {
+    color: #94A3B8;
+}
+
+.doc-action-btn--delete:hover {
+    background: #FEE2E2;
     color: #DC2626;
-}
-
-.doc-action-btn--danger:hover {
-    background: #DC2626;
-    color: var(--white);
+    transform: scale(1.08);
 }
 
 /* =========================================
